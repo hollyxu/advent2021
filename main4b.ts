@@ -61,17 +61,19 @@ function getBoardScore(board: Bingo, state: BingoState, lastCalled: number): num
  * Mutates bingo boards (Because they contain state).
  */
 function solver(bingoCalls: number[], bingoBoards: Bingo[]): number {
-    let hasWin = false;
+    // To find the last board that wins, keep track of number of boards that already won.
+    let winCount = 0;
     let bingoCallIndex = 0;
 
     let boardStates = [];
+    let boardWinState = Array(bingoBoards.length).fill(false);
 
     // initialize bingo board states. lazy magic numbers
     for (let i = 0; i < bingoBoards.length; i++) {
         boardStates.push(chunk(Array(25).fill(false), 5));
     }
 
-    while (!hasWin) {
+    while (winCount < bingoBoards.length) {
         if (bingoCallIndex === bingoCalls.length) {
             console.error("No solution found. Out of bingo calls");
             break;
@@ -82,8 +84,12 @@ function solver(bingoCalls: number[], bingoBoards: Bingo[]): number {
         // Update state for each board
         for (let i = 0; i < bingoBoards.length; i++) {
             boardStates[i] = calculateNextState(calledNumber, boardStates[i], bingoBoards[i]);
-            if (isBingo(boardStates[i])) {
-                return getBoardScore(bingoBoards[i], boardStates[i], calledNumber);
+            if (isBingo(boardStates[i]) && !boardWinState[i]) {
+                winCount += 1;
+                boardWinState[i] = true;
+                if (winCount === bingoBoards.length) {
+                    return getBoardScore(bingoBoards[i], boardStates[i], calledNumber);
+                }
             }
         }
 
